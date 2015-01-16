@@ -23,23 +23,6 @@ class Piece:
         from pprint import pprint
         return str(pprint(vars(self)))
 
-pp = [Piece('010111010', 311),
-      Piece('111101', 214),
-      Piece('110011001', 314),
-      Piece('110011010', 324),
-      Piece('110010011', 322),
-      Piece('111110', 224),
-      Piece('11100011', 224),
-      Piece('11110100', 224),
-      Piece('111010010', 314),
-      Piece('11111000', 224),
-      Piece('111100100', 314),
-      Piece('11111', 112)]
-
-board = np.array([False] * 60).reshape(6, 10)
-pmx = 11
-l = np.zeros((6, 10))
-
 def allp(pp):
     for i, p in enumerate(pp):
         if p.pos < 0:
@@ -57,7 +40,7 @@ def chk(board, pp, x, y, lvl):
         pp[i].sel = j
         pp[i].pos = y * 10 + x - d
         # すべてのピースを置ききったらTrueを返す（recursiveコールの終了）
-        if lvl == pmx: return True
+        if lvl == 11: return True
         b += p
         k = board.argmin()
         # ここまで成功したら次のピースを試す
@@ -67,16 +50,60 @@ def chk(board, pp, x, y, lvl):
         pp[i].pos = -1
     return False
 
-r = chk(board, pp, 0, 0, 0)
-print "r=", r
+# entry point
+def main():
+    pp = [Piece('010111010', 311),
+          Piece('111101', 214),
+          Piece('110011001', 314),
+          Piece('110011010', 324),
+          Piece('110010011', 322),
+          Piece('111110', 224),
+          Piece('11100011', 224),
+          Piece('11110100', 224),
+          Piece('111010010', 314),
+          Piece('11111000', 224),
+          Piece('111100100', 314),
+          Piece('11111', 112)]
 
-for i, p in enumerate(pp):
-    x, y, z = p.pos % 10, p.pos // 10, p.cand[p.sel][0]
-    #print "x=", x
-    #print "y=", y
-    #print "z=", z
-    #print "i=", i
-    #print "p=", p
-    l[y:y + z.shape[0], x:x + z.shape[1]] += z * i
+    board = np.array([False] * 60).reshape(6, 10)
+    l = np.zeros((6, 10))
+    r = chk(board, pp, 0, 0, 0)
 
-print('\n'.join(''.join(chr(int(j) + 65) for j in i) for i in l))
+    for i, p in enumerate(pp):
+        x, y, z = p.pos % 10, p.pos // 10, p.cand[p.sel][0]
+        l[y:y + z.shape[0], x:x + z.shape[1]] += z * i
+
+    print('\n'.join(''.join(chr(int(j) + 65) for j in i) for i in l))
+
+#----------------------------------------------------------------------
+# unittests
+#
+
+import unittest
+class TestPentomino(unittest.TestCase):
+    def test_solveit(self):
+        import sys
+        from StringIO import StringIO
+
+        expected = '\n'.join([
+            "BBBCCDDIII",
+            "BGBACCDDIL",
+            "GGAAACDJIL",
+            "GEEAJJJJKL",
+            "GEFFHHHHKL",
+            "EEFFFHKKKL",
+        ])
+
+        saved_stdout = sys.stdout
+        try:
+            out = StringIO()
+            sys.stdout = out
+            main()
+            output = out.getvalue().strip()
+
+            assert output == expected
+        finally:
+            sys.stdout = saved_stdout
+
+if __name__ == '__main__':
+    unittest.main()
